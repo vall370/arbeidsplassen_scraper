@@ -55,16 +55,6 @@ async function main() {
         .catch(error => {
             console.error(`Error fetching data: ${error.message}`);
         });
-    // for (const url of ids) {
-    //     try {
-    //         let res = await fetch(url.url).then(res => res.json())
-    //         if (res['_source']['status'] !== 'ACTIVE')
-    //             console.log(res['_source']);
-    //     } catch (error) {
-
-    //     }
-
-    // }
 }
 main()
     .then(async () => {

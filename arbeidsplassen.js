@@ -107,39 +107,6 @@ async function main() {
         .catch(error => {
             console.error(`Error fetching data: ${error.message}`);
         });
-    /* for (const url of urls) {
-        try {
-            const newUrl = url.replace("/stilling/", "/api/stilling/");
-
-            const response = await fetch(newUrl);
-            const jobAd = await response.json();
-
-            const jobAdsSchema = {
-                id: jobAd['_id'],
-                businessName: jobAd['_source']['businessName'] || null,
-                medium: jobAd['_source']['medium'] || null,
-                published: jobAd['_source']['published'] || null,
-                expires: jobAd['_source']['expires'] || null,
-                title: jobAd['_source']['title'] || null,
-                locationList: jobAd['_source']['locationList'] || null,
-                contactList: jobAd['_source']['contactList'] || null,
-                // employer: jobAd['_source']['employer'] || null,
-                // location: jobAd['_source']['location'] || null,
-                // external_id: jobAd['_source']['id'] || null,
-                updated: jobAd['_source']['updated'] || null,
-                properties: jobAd['_source']['properties'] || null,
-                status: jobAd['_source']['status'] || null,
-            };
-            // console.log(jobAdsSchema);
-            const jobListing = await prisma.job_listing.create({
-                data: jobAdsSchema
-            })
-        } catch (error) {
-            console.log(error);
-        }
-
-
-    } */
 }
 main()
     .then(async () => {
