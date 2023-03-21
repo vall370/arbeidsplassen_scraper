@@ -1,0 +1,25 @@
+{
+  "name": "arbeidsplassen_scraper",
+  "version": "1.0.0",
+  "description": "This repository contains a web scraping application for the Norwegian job search website, Arbeidsplassen.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vall370/arbeidsplassen_scraper.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/vall370/arbeidsplassen_scraper/issues"
+  },
+  "homepage": "https://github.com/vall370/arbeidsplassen_scraper#readme",
+  "dependencies": {
+    "@prisma/client": "^4.11.0",
+    "bluebird": "^3.7.2",
+    "puppeteer": "^19.7.5"
+  }
+}
