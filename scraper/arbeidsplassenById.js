@@ -1,6 +1,6 @@
 const { PrismaClient } = require("@prisma/client")
 const prisma = new PrismaClient()
-const Promise = require('bluebird');
+const axios = require('axios');
 
 async function main() {
     let ids = await prisma.job_listing.findMany({
@@ -17,44 +17,54 @@ async function main() {
             url: `https://arbeidsplassen.nav.no/stillinger/api/stilling/${i.id}`
         }
     })
-    const concurrencyLimit = 10;
-    const fetchData = async url => {
-        try {
-            const response = await fetch(url.url);
-            if (!response.ok) {
-                throw new Error(`Failed to fetch data from ${url}`);
-            }
-            return response.json();
-        } catch (error) {
-            console.error(`Error fetching data from ${url}: ${error.message}`);
-            return null;
-        }
-    };
-    Promise.map(ids, fetchData, { concurrency: concurrencyLimit })
-        .then(async data => {
-            const newData = data.map(jobAd => {
-                if (jobAd['_source']['status'] !== 'ACTIVE')
-                    return {
-                        id: jobAd['_id'],
-                        status: jobAd['_source']['status'] || null,
-                    }
-            }).filter(y => y !== undefined);
-            console.log(newData);
-            for (const data of newData) {
-                const updateUser = await prisma.job_listing.update({
-                    where: {
-                        id: data.id,
-                    },
-                    data: {
-                        status: data.status,
-                    },
-                })
-            }
 
-        })
-        .catch(error => {
-            console.error(`Error fetching data: ${error.message}`);
+    const fetchBatchData = async urls => {
+        const requests = urls.map(url => axios.get(url.url));
+        const responses = await Promise.allSettled(requests);
+        const data = responses.map(response => {
+            if (response.status === 'fulfilled') {
+                return response.value.data;
+            } else {
+                // if not fulfilled, link is inactive. Therefore status should be INACTIVE
+                const id = response.reason.config.url.split('https://arbeidsplassen.nav.no/stillinger/api/stilling/')[1]
+                const obj = { '_id': id, '_source': { 'status': 'INACTIVE' } }
+                console.log(obj)
+                return { '_id': id, '_source': { 'status': 'INACTIVE' } }
+            }
         });
+        return data.filter(Boolean);
+    };
+    const createBatchOfUpdates = async () => {
+        const arrayOfUpdates = []
+        const batchedIds = []; // Array of arrays, each containing a batch of ids
+        const batchSize = 10; // The number of ids to include in each batch
+        for (let i = 0; i < ids.length; i += batchSize) {
+            batchedIds.push(ids.slice(i, i + batchSize));
+        }
+        for (const batch of batchedIds) {
+            // console.log(batch);
+            const data = await fetchBatchData(batch)
+
+            const newData = data.map(item => {
+                if (item['_source']['status'] !== 'ACTIVE') {
+                    return {
+                        id: item['_id'],
+                        status: item['_source']['status']
+                    }
+                }
+
+            }).filter(x => x !== undefined)
+            for (const obj of newData) {
+                arrayOfUpdates.push({ where: { id: obj.id }, data: { status: obj.status } })
+            }
+        }
+        return arrayOfUpdates
+    }
+
+    const i = await createBatchOfUpdates()
+    for (const obj of i) {
+        await prisma.job_listing.update(obj)
+    }
 }
 main()
     .then(async () => {
